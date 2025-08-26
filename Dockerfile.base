@@ -19,17 +19,17 @@ RUN apt-get update && \
 # Create a non-root user and group, set permissions, and configure Apache
 RUN groupadd -g ${GID} apache && \
     useradd -u ${UID} -g ${GID} -s /bin/false apache && \
-    mkdir -p /var/log/apache2 /var/run/apache2 /var/lib/apache2 && \
-    chown -R apache:apache /var/www/html && \
+    mkdir -p /var/lib/apache2 /var/log/apache2 /var/run/apache2 && \
+    chmod -R 750 /etc/apache2 && \
     chmod -R 750 /var/www/html && \
+    chmod -R 750 /var/lib/apache2 && \
     chmod -R 750 /var/log/apache2 && \
     chmod -R 750 /var/run/apache2 && \
-    chmod -R 750 /var/lib/apache2 && \
-    chmod -R 750 /etc/apache2 && \
-    chown -R apache:apache /var/run/apache2 && \
-    chown -R apache:apache /var/lib/apache2 && \
     chown -R apache:apache /etc/apache2 && \
-    chmod -R 750 /var/www/html /var/log/apache2 /var/run/apache2 /var/lib/apache2 /etc/apache2 && \
+    chown -R apache:apache /var/www/html && \
+    chown -R apache:apache /var/lib/apache2 && \
+    chown -R apache:apache /var/log/apache2 && \
+    chown -R apache:apache /var/run/apache2 && \
     ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
     ln -sf /proc/self/fd/1 /var/log/apache2/other_vhosts_access.log && \
     ln -sf /proc/self/fd/2 /var/log/apache2/error.log && \
@@ -53,4 +53,4 @@ USER apache
 WORKDIR /var/www/html
 
 # Start Apache in foreground
-CMD ["apache2ctl", "-DFOREGROUND"]
+CMD ["apache2ctl", "-D", "FOREGROUND"]
