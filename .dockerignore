@@ -1,0 +1,4 @@
+.gitignore
+docker-bake.hcl
+docker-compose.yml
+tests/
