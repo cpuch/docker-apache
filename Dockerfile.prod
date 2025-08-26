@@ -1,0 +1,19 @@
+# Use the base image
+FROM cpuchalver/apache2:base
+
+# Temporarily switch to root for creating directories and setting permissions
+USER root
+
+# Create a directory for mod_evasive logs and set appropriate ownership and permissions
+RUN mkdir -p /var/log/apache2/mod_evasive && \
+    chown -R apache:apache /var/log/apache2/mod_evasive && \
+    chmod -R 750 /var/log/apache2/mod_evasive
+
+# Switch back to the non-root user
+USER apache
+
+# Copy custom Apache configuration files
+COPY conf/ /etc/apache2/conf-available/
+
+# Enable specific Apache configurations
+RUN a2enconf security remoteip ddos-protection

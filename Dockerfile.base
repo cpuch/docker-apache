@@ -1,0 +1,64 @@
+# Use a minimal Debian image as the base for the Apache server
+FROM debian:bookworm-slim
+
+# Build arguments with default values for user and group IDs
+ARG UID=1000
+ARG GID=1000
+
+# Set environment variables to avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+ENV UID=${UID}
+ENV GID=${GID}
+
+# Update the package list and install Apache
+RUN apt-get update && \
+    apt-get install -y apache2 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Create a non-root user and group
+RUN groupadd -g ${GID} apache && \
+    useradd -u ${UID} -g ${GID} -s /bin/false apache && \
+    mkdir -p /var/log/apache2 /var/run/apache2 /var/lib/apache2 && \
+    chown -R apache:apache /var/www/html && \
+    chown -R apache:apache /var/log/apache2 && \
+    chown -R apache:apache /var/run/apache2 && \
+    chown -R apache:apache /var/lib/apache2 && \
+    chown -R apache:apache /etc/apache2
+
+# Set strict permissions for Apache directories
+RUN chmod -R 750 /var/www/html && \
+    chmod -R 750 /var/log/apache2 && \
+    chmod -R 750 /var/run/apache2 && \
+    chmod -R 750 /var/lib/apache2 && \
+    chmod -R 750 /etc/apache2
+
+# Redirect Apache logs to stdout and stderr
+RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
+    ln -sf /proc/self/fd/1 /var/log/apache2/other_vhosts_access.log && \
+    ln -sf /proc/self/fd/2 /var/log/apache2/error.log
+
+# Configure Apache to run as non-root
+RUN sed -i 's/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=apache/' /etc/apache2/envvars && \
+    sed -i 's/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=apache/' /etc/apache2/envvars
+
+# Enable commonly used Apache modules
+RUN a2enmod deflate rewrite headers
+
+# Copy the healthcheck script with executable permissions
+COPY --chmod=755 healthcheck.sh /usr/local/bin/healthcheck
+
+# Add a health check to monitor the container's health
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD /usr/local/bin/healthcheck
+
+# Expose port 80 for HTTP traffic
+EXPOSE 80
+
+# Switch to non-root user
+USER apache
+
+# Set the working directory for the container
+WORKDIR /var/www/html
+
+# Start Apache in foreground
+CMD ["apache2ctl", "-DFOREGROUND"]
