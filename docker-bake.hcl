@@ -7,7 +7,7 @@ target "base" {
     dockerfile = "Dockerfile.base"
     tags = ["cpuchalver/apache2:base"]
     platforms = ["linux/amd64"]
-    cache-to = ["type=gha,mode=max"]
+    cache-to = ["type=gha,scope=base,mode=max"]
     cache-from = ["type=gha"]
     args = {
         UID = 1000
@@ -21,7 +21,7 @@ target "prod" {
     dockerfile = "Dockerfile.prod"
     tags = ["cpuchalver/apache2", "cpuchalver/apache2:prod"]
     platforms = ["linux/amd64"]
-    cache-to = ["type=gha,mode=max"]
+    cache-to = ["type=gha,scope=prod,mode=max"]
     cache-from = ["type=gha"]
     args = {
         UID = 1000
