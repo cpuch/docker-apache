@@ -12,38 +12,30 @@ ENV GID=${GID}
 
 # Update the package list and install Apache
 RUN apt-get update && \
-    apt-get install -y apache2 && \
+    apt-get install -y --no-install-recommends apache2 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create a non-root user and group
+# Create a non-root user and group, set permissions, and configure Apache
 RUN groupadd -g ${GID} apache && \
     useradd -u ${UID} -g ${GID} -s /bin/false apache && \
     mkdir -p /var/log/apache2 /var/run/apache2 /var/lib/apache2 && \
     chown -R apache:apache /var/www/html && \
-    chown -R apache:apache /var/log/apache2 && \
-    chown -R apache:apache /var/run/apache2 && \
-    chown -R apache:apache /var/lib/apache2 && \
-    chown -R apache:apache /etc/apache2
-
-# Set strict permissions for Apache directories
-RUN chmod -R 750 /var/www/html && \
+    chmod -R 750 /var/www/html && \
     chmod -R 750 /var/log/apache2 && \
     chmod -R 750 /var/run/apache2 && \
     chmod -R 750 /var/lib/apache2 && \
-    chmod -R 750 /etc/apache2
-
-# Redirect Apache logs to stdout and stderr
-RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
+    chmod -R 750 /etc/apache2 && \
+    chown -R apache:apache /var/run/apache2 && \
+    chown -R apache:apache /var/lib/apache2 && \
+    chown -R apache:apache /etc/apache2 && \
+    chmod -R 750 /var/www/html /var/log/apache2 /var/run/apache2 /var/lib/apache2 /etc/apache2 && \
+    ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
     ln -sf /proc/self/fd/1 /var/log/apache2/other_vhosts_access.log && \
-    ln -sf /proc/self/fd/2 /var/log/apache2/error.log
-
-# Configure Apache to run as non-root
-RUN sed -i 's/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=apache/' /etc/apache2/envvars && \
-    sed -i 's/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=apache/' /etc/apache2/envvars
-
-# Enable commonly used Apache modules
-RUN a2enmod deflate rewrite headers
+    ln -sf /proc/self/fd/2 /var/log/apache2/error.log && \
+    sed -i 's/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=apache/' /etc/apache2/envvars && \
+    sed -i 's/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=apache/' /etc/apache2/envvars && \
+    a2enmod deflate rewrite headers
 
 # Copy the healthcheck script with executable permissions
 COPY --chmod=755 healthcheck.sh /usr/local/bin/healthcheck

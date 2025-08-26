@@ -16,4 +16,5 @@ USER apache
 COPY conf/ /etc/apache2/conf-available/
 
 # Enable specific Apache configurations
-RUN a2enconf security remoteip ddos-protection
+RUN a2enconf security remoteip ddos-protection && \
+    apache2ctl configtest
