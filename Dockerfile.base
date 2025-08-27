@@ -35,7 +35,7 @@ RUN groupadd -g ${GID} apache && \
     ln -sf /proc/self/fd/2 /var/log/apache2/error.log && \
     sed -i 's/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=apache/' /etc/apache2/envvars && \
     sed -i 's/export APACHE_RUN_GROUP=www-data/export APACHE_RUN_GROUP=apache/' /etc/apache2/envvars && \
-    a2enmod deflate rewrite headers
+    a2enmod deflate rewrite headers expires
 
 # Copy the healthcheck script with executable permissions
 COPY --chmod=755 healthcheck.sh /usr/local/bin/healthcheck
